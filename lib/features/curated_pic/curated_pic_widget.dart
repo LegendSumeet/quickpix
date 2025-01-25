@@ -40,26 +40,25 @@ class _CuratedPicWidgetState extends State<CuratedPicWidget> {
           return Skeletonizer(
             enabled: state is CuratedPicsLoading,
             child: MasonryGridView.builder(
+              shrinkWrap: true,
               addAutomaticKeepAlives: true,
+              physics: const BouncingScrollPhysics(), // Disables inner scrolling.
+
               addRepaintBoundaries: true,
               key: const PageStorageKey('curated_pics'),
-              gridDelegate:
-                  const SliverSimpleGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: const SliverSimpleGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
               ),
               mainAxisSpacing: 4.0,
               crossAxisSpacing: 4.0,
               itemBuilder: (context, index) {
-                return InkWell(
+                return _AnimatedImageTile(
+                  image: images[index],
                   onTap: () {
                     Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => ImgViewScreen(
-                            imageSrc: images[index])));
+                      builder: (context) => ImgViewScreen(imageSrc: images[index]),
+                    ));
                   },
-                  child: ImageWidget(
-                      size: ImageSize.portrait,
-                      key: ValueKey(images[index].id),
-                      src: images[index]),
                 );
               },
               itemCount: images.length,
@@ -70,6 +69,65 @@ class _CuratedPicWidgetState extends State<CuratedPicWidget> {
         }
         return const SizedBox.shrink();
       },
+    );
+  }
+}
+
+
+
+class _AnimatedImageTile extends StatefulWidget {
+  final dynamic image; // Replace `dynamic` with your image model type
+  final VoidCallback onTap;
+
+  const _AnimatedImageTile({
+    Key? key,
+    required this.image,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  State<_AnimatedImageTile> createState() => _AnimatedImageTileState();
+}
+
+class _AnimatedImageTileState extends State<_AnimatedImageTile>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _opacityAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeIn,
+    );
+
+    // Start animation when the widget is built
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacityAnimation,
+      child: InkWell(
+        onTap: widget.onTap,
+        child: ImageWidget(
+          size: ImageSize.portrait,
+          key: ValueKey(widget.image.id),
+          src: widget.image,
+        ),
+      ),
     );
   }
 }

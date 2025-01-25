@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:picpixels/features/img/img.dart';
 import 'package:picpixels/model/image_src.dart';
+import 'package:picpixels/screens/photo_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ImgViewScreen extends StatefulWidget {
@@ -42,8 +43,7 @@ class _ImgViewScreenState extends State<ImgViewScreen> {
                   style: TextStyle(fontSize: 14), // Custom font size
                 ),
                 selected: size == chip['size'],
-                tooltip:
-                    'Select size: ${chip['label']}', // Accessibility improvement
+                tooltip: 'Select size: ${chip['label']}', // Accessibility improvement
                 onSelected: (isSelected) {
                   if (isSelected) {
                     setState(() {
@@ -59,29 +59,27 @@ class _ImgViewScreenState extends State<ImgViewScreen> {
       appBar: AppBar(),
       body: SingleChildScrollView(
         child: Padding(
-          padding:
-              const EdgeInsets.all(16.0), // Add consistent padding to the page
+          padding: const EdgeInsets.all(16.0), // Add consistent padding to the page
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Image Widget
-              ClipRRect(
-                borderRadius: BorderRadius.circular(
-                    12), // Add rounded corners for modern feel
-                child: ImageWidget(src: widget.imageSrc, size: size),
+              InkWell(
+                onTap: () async {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => PhotoViewWidget(url: getImageUrl(widget.imageSrc.src, size))));
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12), // Add rounded corners for modern feel
+                  child: ImageWidget(src: widget.imageSrc, size: size),
+                ),
               ),
-              const SizedBox(
-                  height: 16), // Add spacing between the image and text
+              const SizedBox(height: 16), // Add spacing between the image and text
 
               // Image Description
               Text(
-                widget.imageSrc.alt.isNotEmpty
-                    ? widget.imageSrc.alt
-                    : 'No description available',
+                widget.imageSrc.alt.isNotEmpty ? widget.imageSrc.alt : 'No description available',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight
-                          .w600, // Make the text slightly bolder for emphasis
-
+                      fontWeight: FontWeight.w600, // Make the text slightly bolder for emphasis
                     ),
                 textAlign: TextAlign.left,
               ),
@@ -93,13 +91,12 @@ class _ImgViewScreenState extends State<ImgViewScreen> {
                 children: [
                   // Photographer Icon
                   CircleAvatar(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    radius: 16,
                     child: Icon(
                       Icons.person,
                       color: Theme.of(context).colorScheme.primary,
                     ),
-                    radius: 16,
                   ),
                   const SizedBox(width: 12),
 
@@ -110,18 +107,16 @@ class _ImgViewScreenState extends State<ImgViewScreen> {
                       children: [
                         Text(
                           'Photographer',
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           widget.imageSrc.photographer,
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontSize: 14,
-                                  ),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontSize: 14,
+                              ),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ),

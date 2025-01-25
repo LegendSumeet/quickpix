@@ -1,8 +1,11 @@
 import 'dart:io';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:picpixels/dio/dio_client.dart';
 import 'package:picpixels/screens/homescreen.dart';
+import 'firebase_options.dart';
 import 'util.dart';
 import 'theme.dart';
 
@@ -16,10 +19,16 @@ class MyHttpOverrides extends HttpOverrides {
 }
 
 void main() async {
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+
   if (Platform.isWindows) {
     HttpOverrides.global = MyHttpOverrides();
   }
-
 
   runApp(const MyApp());
 }
@@ -48,9 +57,10 @@ class _MyAppState extends State<MyApp> {
   void toggleTheme() {
     setState(() {
       _themeMode =
-      _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+          _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
     });
   }
+
   @override
   Widget build(BuildContext context) {
     final brightness = View.of(context).platformDispatcher.platformBrightness;
@@ -63,8 +73,7 @@ class _MyAppState extends State<MyApp> {
       theme: theme.light(),
       darkTheme: theme.dark(),
       debugShowCheckedModeBanner: false,
-
-      themeMode: _themeMode,
+      themeMode:ThemeMode.dark,
       home: const Homescreen(),
     );
   }

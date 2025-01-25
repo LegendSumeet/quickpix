@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,28 +15,23 @@ class Homescreen extends StatefulWidget {
   State<Homescreen> createState() => _HomescreenState();
 }
 
-class _HomescreenState extends State<Homescreen>
-    with AutomaticKeepAliveClientMixin {
+class _HomescreenState extends State<Homescreen> with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
+  SearchController searchController = SearchController();
+  FocusNode searchFocusNode = FocusNode();
   bool isExtended = false;
-  _scrollListener() {
-    if (_scrollController.position.userScrollDirection ==
-        ScrollDirection.reverse) {
-      setState(() {
-        isExtended = false;
-      });
-    } else {
-      setState(() {
-        isExtended = true;
-      });
-    }
-  }
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    _scrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    searchController.dispose();
+    searchFocusNode.dispose();
+    super.dispose();
   }
 
   List<String> suggestions = [
@@ -70,106 +66,96 @@ class _HomescreenState extends State<Homescreen>
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
-      appBar: AppBar(
-        actions: [
-          IconButton(
-            icon: Icon(
-              Theme.of(context).brightness == Brightness.dark
-                  ? Icons.dark_mode
-                  : Icons.light_mode,
-            ),
-            onPressed: () {
-              if (Theme.of(context).brightness == Brightness.dark) {
-                // Switch to light mode
-                MyApp.of(context).setTheme(ThemeMode.light);
-              } else {
-                // Switch to dark mode
-                MyApp.of(context).setTheme(ThemeMode.dark);
-              }
-            },
-          ),
-        ],
-        elevation: 0,
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        title: const Text('QuickPix'),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => SearchPage()));
+
+        },
+        child: const Icon(Icons.search),
       ),
-      body: NestedScrollView(
-        controller: _scrollController,
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
+      body: BlocProvider(
+        create: (context) => CuratedPicsBloc(dioClient: DioClient()),
+        child: CustomScrollView(
+          slivers: [
             SliverAppBar(
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              actions: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  child: Padding(
-                    padding: const EdgeInsets.all(5.0),
-                    child: SearchAnchor.bar(
-                      isFullScreen: true,
-                      barElevation: WidgetStatePropertyAll(0),
-                      barHintText: 'Type...',
-                      suggestionsBuilder: (context, text) {
-                        List<String> filteredSuggestions = suggestions
-                            .where((suggestion) => suggestion
-                                .toLowerCase()
-                                .contains(text.text.toLowerCase()))
-                            .toList();
 
-                        if (filteredSuggestions.isEmpty) {
-                          return [
-                            ListTile(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ImageSearchWidget(
-                                      query: text.text,
-                                    ),
-                                  ),
-                                );
-                              },
-                              title: Text(text.text),
-                            ),
-                          ];
-                        }
-
-                        return filteredSuggestions.map((suggestion) {
-                          return ListTile(
-                            title: Text(suggestion),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ImageSearchWidget(
-                                    query: suggestion,
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        }).toList();
-                      },
-                    ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.circular(20),
+                ),
+              ),
+              backgroundColor: Colors.transparent,
+              expandedHeight: 150.0,
+              floating: false,
+              pinned: false,
+              centerTitle: true,
+              title: Hero(
+                tag: 'appLogo',
+                child: Material(
+                  color: Colors.transparent,
+                  child: Image.asset(
+                    'assets/logo/736x744logo.png',
+                    height: 40,
                   ),
                 ),
-              ],
-              floating: true,
-              pinned: false,
-              snap: true,
-              automaticallyImplyLeading: false,
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(20),
+                      ),
+                      child: AnimatedOpacity(
+                        opacity: 1.0,
+                        duration: const Duration(milliseconds: 1000),
+                        curve: Curves.easeInOut,
+                        child: CachedNetworkImage(
+                          fit: BoxFit.cover,
+                          fadeInCurve: Curves.easeIn,
+                          fadeInDuration: const Duration(milliseconds: 800),
+                          fadeOutCurve: Curves.easeOut,
+                          imageUrl:
+                          'https://firebasestorage.googleapis.com/v0/b/pix-app-8160e.firebasestorage.app/o/home.jpg?alt=media&token=c2dc4d08-3a3e-4035-94e0-5ba55cae65c9',
+                        ),
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withOpacity(0.6),
+                            Colors.transparent,
+                          ],
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ];
-        },
-        body: BlocProvider(
-          create: (context) => CuratedPicsBloc(dioClient: DioClient()),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: const CuratedPicWidget(key: ValueKey('curated_pics')),
-          ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 700),
+                  switchInCurve: Curves.easeIn,
+                  switchOutCurve: Curves.easeOut,
+                  child: CuratedPicWidget(
+                    key: ValueKey('curated_pics'),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+
 
   @override
   bool get wantKeepAlive => true;
@@ -214,9 +200,7 @@ class ImageSearchDelegate extends SearchDelegate<String> {
 
   @override
   Widget buildResults(BuildContext context) {
-    final results = predefinedTerms
-        .where((term) => term.toLowerCase().contains(query.toLowerCase()))
-        .toList();
+    final results = predefinedTerms.where((term) => term.toLowerCase().contains(query.toLowerCase())).toList();
 
     return results.isEmpty
         ? _noResultsFound(context) // Display no results UI
@@ -225,11 +209,7 @@ class ImageSearchDelegate extends SearchDelegate<String> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    final suggestions = query.isEmpty
-        ? predefinedTerms
-        : predefinedTerms
-            .where((term) => term.toLowerCase().contains(query.toLowerCase()))
-            .toList();
+    final suggestions = query.isEmpty ? predefinedTerms : predefinedTerms.where((term) => term.toLowerCase().contains(query.toLowerCase())).toList();
 
     return _buildSuggestionsList(suggestions);
   }
@@ -333,8 +313,7 @@ class AnimatedIconButton extends StatefulWidget {
   _AnimatedIconButtonState createState() => _AnimatedIconButtonState();
 }
 
-class _AnimatedIconButtonState extends State<AnimatedIconButton>
-    with SingleTickerProviderStateMixin {
+class _AnimatedIconButtonState extends State<AnimatedIconButton> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 

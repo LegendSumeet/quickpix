@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   firebase_core
+  system_theme
   url_launcher_windows
 )
 

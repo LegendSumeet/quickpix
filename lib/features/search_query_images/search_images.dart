@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:picpixels/features/camera/camera.dart';
+import 'package:picpixels/features/curated_pic/curated_pic_widget.dart';
 import 'package:picpixels/features/img/img.dart';
 import 'package:picpixels/features/search_query_images/search_query_app_cubit.dart';
 import 'package:picpixels/model/image_src.dart';
@@ -21,6 +22,9 @@ class _ImageSearchWidgetState extends State<ImageSearchWidget> with AutomaticKee
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
+      persistentFooterButtons: [
+        Text("Photos provided by Pexels", style: TextStyle(fontSize: 12)),
+      ],
       appBar: AppBar(
         title: Text(widget.query),
       ),
@@ -65,11 +69,12 @@ class _SearchResultsWidgetState extends State<SearchResultsWidget> with Automati
               mainAxisSpacing: 4.0,
               crossAxisSpacing: 4.0,
               itemBuilder: (context, index) {
-                return InkWell(
+                return AnimatedImageTile(
                   onTap: () {
                     Navigator.of(context).push(MaterialPageRoute(builder: (context) => ImgViewScreen(imageSrc: images[index])));
                   },
-                  child: ImageWidget(size: ImageSize.portrait, key: ValueKey(images[index].id), src: images[index]),
+                  index: index,
+                  image: images[index],
                 );
               },
               itemCount: images.length,
@@ -144,17 +149,17 @@ class _SearchPageState extends State<SearchPage> {
           style: TextStyle(fontSize: 14, color: Colors.grey),
         ),
       ],
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CameraPage(),
-            ),
-          );
-        },
-        child: const Icon(Icons.camera),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () async {
+      //     Navigator.push(
+      //       context,
+      //       MaterialPageRoute(
+      //         builder: (context) => CameraPage(),
+      //       ),
+      //     );
+      //   },
+      //   child: const Icon(Icons.camera),
+      // ),
       appBar: AppBar(
         toolbarHeight: 80,
         elevation: 0,
@@ -165,14 +170,14 @@ class _SearchPageState extends State<SearchPage> {
             autofocus: true,
             autofillHints: suggestions,
             onFieldSubmitted: (value) {
-             Navigator.push(
-               context,
-               MaterialPageRoute(
-                 builder: (context) => ImageSearchWidget(
-                   query: value,
-                 ),
-               ),
-             );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ImageSearchWidget(
+                    query: value,
+                  ),
+                ),
+              );
             },
             onChanged: search,
             decoration: InputDecoration(

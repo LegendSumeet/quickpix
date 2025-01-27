@@ -52,7 +52,8 @@ class _CuratedPicWidgetState extends State<CuratedPicWidget> {
               mainAxisSpacing: 4.0,
               crossAxisSpacing: 4.0,
               itemBuilder: (context, index) {
-                return _AnimatedImageTile(
+                return AnimatedImageTile(
+                  index: index,
                   image: images[index],
                   onTap: () {
                     Navigator.of(context).push(MaterialPageRoute(
@@ -73,24 +74,23 @@ class _CuratedPicWidgetState extends State<CuratedPicWidget> {
   }
 }
 
-
-
-class _AnimatedImageTile extends StatefulWidget {
+class AnimatedImageTile extends StatefulWidget {
   final dynamic image; // Replace `dynamic` with your image model type
   final VoidCallback onTap;
+  final int index;
 
-  const _AnimatedImageTile({
+  const AnimatedImageTile({
     Key? key,
     required this.image,
     required this.onTap,
+    required this.index,
   }) : super(key: key);
 
   @override
-  State<_AnimatedImageTile> createState() => _AnimatedImageTileState();
+  State<AnimatedImageTile> createState() => _AnimatedImageTileState();
 }
 
-class _AnimatedImageTileState extends State<_AnimatedImageTile>
-    with SingleTickerProviderStateMixin {
+class _AnimatedImageTileState extends State<AnimatedImageTile> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _opacityAnimation;
 
@@ -118,12 +118,22 @@ class _AnimatedImageTileState extends State<_AnimatedImageTile>
 
   @override
   Widget build(BuildContext context) {
+    ImageSize _getSizeForIndex(int index) {
+      final sizes = [
+        ImageSize.large,
+        ImageSize.medium,
+        ImageSize.portrait,
+        ImageSize.landscape,
+      ];
+      return sizes[index % sizes.length];
+    }
+
     return FadeTransition(
       opacity: _opacityAnimation,
       child: InkWell(
         onTap: widget.onTap,
         child: ImageWidget(
-          size: ImageSize.portrait,
+          size: _getSizeForIndex(widget.index),
           key: ValueKey(widget.image.id),
           src: widget.image,
         ),

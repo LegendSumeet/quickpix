@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:better_open_file/better_open_file.dart';
 import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:camerawesome/pigeon.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -11,46 +13,74 @@ import 'package:cross_file/cross_file.dart';
 class CameraPage extends StatelessWidget {
   const CameraPage({super.key});
 
+  Future<String> sendToGemini(File imageFile, String prompt) async {
+    const apiUrl = 'https://gemini-api.example.com/generate-keyword'; // Replace with the actual Gemini API endpoint
+    const apiKey = 'your_api_key'; // Replace with your API key
+
+    final dio = Dio();
+
+    try {
+      // Convert image to base64
+      final base64Image = base64Encode(await imageFile.readAsBytes());
+
+      final response = await dio.post(
+        apiUrl,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $apiKey',
+            'Content-Type': 'application/json',
+          },
+        ),
+        data: {
+          'model': 'gemini-1.5-flash-latest',
+          'content': [
+            {
+              'type': 'text',
+              'data': prompt,
+            },
+            {
+              'type': 'image',
+              'data': base64Image,
+            }
+          ],
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        return responseData['keyword'];
+      } else {
+        throw Exception('Failed to get keyword: ${response.statusCode} - ${response.data}');
+      }
+    } catch (e) {
+      debugPrint('Dio Error: $e');
+      rethrow;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         color: Colors.white,
         child: CameraAwesomeBuilder.awesome(
-          onMediaCaptureEvent: (event) {
-            switch ((event.status, event.isPicture, event.isVideo)) {
-              case (MediaCaptureStatus.capturing, true, false):
-                debugPrint('Capturing picture...');
-              case (MediaCaptureStatus.success, true, false):
-                event.captureRequest.when(
-                  single: (single) {
-                    debugPrint('Picture saved: ${single.file?.path}');
-                  },
-                  multiple: (multiple) {
-                    multiple.fileBySensor.forEach((key, value) {
-                      debugPrint('multiple image taken: $key ${value?.path}');
-                    });
-                  },
-                );
-              case (MediaCaptureStatus.failure, true, false):
-                debugPrint('Failed to capture picture: ${event.exception}');
-              case (MediaCaptureStatus.capturing, false, true):
-                debugPrint('Capturing video...');
-              case (MediaCaptureStatus.success, false, true):
-                event.captureRequest.when(
-                  single: (single) {
-                    debugPrint('Video saved: ${single.file?.path}');
-                  },
-                  multiple: (multiple) {
-                    multiple.fileBySensor.forEach((key, value) {
-                      debugPrint('multiple video taken: $key ${value?.path}');
-                    });
-                  },
-                );
-              case (MediaCaptureStatus.failure, false, true):
-                debugPrint('Failed to capture video: ${event.exception}');
-              default:
-                debugPrint('Unknown event: $event');
+          onMediaCaptureEvent: (event) async {
+            if (event.status == MediaCaptureStatus.success && event.isPicture) {
+              event.captureRequest.when(
+                single: (single) async {
+                  final file = single.file;
+                  if (file != null) {
+                    const prompt = 'Analyze this image and suggest a one keyword for similar images.';
+
+                    try {
+                      final keyword = await sendToGemini(File(file.path), prompt);
+                      debugPrint('Keyword for search: $keyword');
+                    } catch (e) {
+                      debugPrint('Error: $e');
+                    }
+                  }
+                },
+              );
             }
           },
           saveConfig: SaveConfig.photoAndVideo(
@@ -61,8 +91,7 @@ class CameraPage extends StatelessWidget {
                 '${extDir.path}/camerawesome',
               ).create(recursive: true);
               if (sensors.length == 1) {
-                final String filePath =
-                    '${testDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+                final String filePath = '${testDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
                 return SingleCaptureRequest(filePath, sensors.first);
               }
               // Separate pictures taken with front and back camera
@@ -119,11 +148,9 @@ class CameraPage extends StatelessWidget {
 
 Future<String> path(CaptureMode captureMode) async {
   final Directory extDir = await getTemporaryDirectory();
-  final testDir =
-      await Directory('${extDir.path}/test').create(recursive: true);
+  final testDir = await Directory('${extDir.path}/test').create(recursive: true);
   final String fileExtension = captureMode == CaptureMode.photo ? 'jpg' : 'mp4';
-  final String filePath =
-      '${testDir.path}/${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+  final String filePath = '${testDir.path}/${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
   return filePath;
 }
 

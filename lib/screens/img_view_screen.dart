@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:picpixels/features/img/img.dart';
 import 'package:picpixels/model/image_src.dart';
 import 'package:picpixels/screens/photo_view.dart';
@@ -72,6 +74,39 @@ class _ImgViewScreenState extends State<ImgViewScreen> {
                   borderRadius: BorderRadius.circular(12), // Add rounded corners for modern feel
                   child: ImageWidget(src: widget.imageSrc, size: size),
                 ),
+              ),
+              const SizedBox(height: 16), // Add spacing between the image and text
+              Row(
+                spacing: 8,
+                children: [
+                  OutlinedButton(onPressed: (){
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => PhotoViewWidget(url: getImageUrl(widget.imageSrc.src, size))));
+
+                  }, child: Text('View')),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () async {
+                        final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+                        try {
+                          final directory = await getApplicationDocumentsDirectory();
+                          final filePath = '${directory.path}/${widget.imageSrc.alt.toString()}jpg';
+                          Dio dio = Dio();
+                          await dio.download(getImageUrl(widget.imageSrc.src, size), filePath);
+
+                          scaffoldMessenger.showSnackBar(
+                            SnackBar(content: Text('Image downloaded to: $filePath')),
+                          );
+                        } catch (e) {
+                          scaffoldMessenger.showSnackBar(
+                            SnackBar(content: Text('Failed to download image: $e')),
+                          );
+                        }
+                      },
+                      child: Text('Download'),
+                    ),
+                  )
+                ],
               ),
               const SizedBox(height: 16), // Add spacing between the image and text
 

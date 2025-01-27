@@ -66,96 +66,31 @@ class _HomescreenState extends State<Homescreen> with AutomaticKeepAliveClientMi
   Widget build(BuildContext context) {
     super.build(context);
     return Scaffold(
+      persistentFooterButtons: [
+        Text("Photos provided by Pexels", style: TextStyle(fontSize: 12)),
+      ],
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) => SearchPage()));
-
         },
         child: const Icon(Icons.search),
       ),
       body: BlocProvider(
         create: (context) => CuratedPicsBloc(dioClient: DioClient()),
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(
-                  bottom: Radius.circular(20),
-                ),
-              ),
-              backgroundColor: Colors.transparent,
-              expandedHeight: 150.0,
-              floating: false,
-              pinned: false,
-              centerTitle: true,
-              title: Hero(
-                tag: 'appLogo',
-                child: Material(
-                  color: Colors.transparent,
-                  child: Image.asset(
-                    'assets/logo/736x744logo.png',
-                    height: 40,
-                  ),
-                ),
-              ),
-              flexibleSpace: FlexibleSpaceBar(
-                background: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.vertical(
-                        bottom: Radius.circular(20),
-                      ),
-                      child: AnimatedOpacity(
-                        opacity: 1.0,
-                        duration: const Duration(milliseconds: 1000),
-                        curve: Curves.easeInOut,
-                        child: CachedNetworkImage(
-                          fit: BoxFit.cover,
-                          fadeInCurve: Curves.easeIn,
-                          fadeInDuration: const Duration(milliseconds: 800),
-                          fadeOutCurve: Curves.easeOut,
-                          imageUrl:
-                          'https://firebasestorage.googleapis.com/v0/b/pix-app-8160e.firebasestorage.app/o/home.jpg?alt=media&token=c2dc4d08-3a3e-4035-94e0-5ba55cae65c9',
-                        ),
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.black.withOpacity(0.6),
-                            Colors.transparent,
-                          ],
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 2.0),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 700),
+            switchInCurve: Curves.easeIn,
+            switchOutCurve: Curves.easeOut,
+            child: CuratedPicWidget(
+              key: ValueKey('curated_pics'),
             ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 700),
-                  switchInCurve: Curves.easeIn,
-                  switchOutCurve: Curves.easeOut,
-                  child: CuratedPicWidget(
-                    key: ValueKey('curated_pics'),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
-
 
   @override
   bool get wantKeepAlive => true;

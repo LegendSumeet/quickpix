@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:picpixels/dio/dio_client.dart';
@@ -21,14 +22,17 @@ class MyHttpOverrides extends HttpOverrides {
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  if(!kIsWeb){
 
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  if (Platform.isWindows) {
-    HttpOverrides.global = MyHttpOverrides();
   }
+
+  // if (Platform.isWindows) {
+  //   HttpOverrides.global = MyHttpOverrides();
+  // }
 
   runApp(const MyApp());
 }

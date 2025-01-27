@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "168378474618",
+    "project_id": "pix-app-8160e",
+    "storage_bucket": "pix-app-8160e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:168378474618:android:4b4a6061de36d118ecdbc3",
+        "android_client_info": {
+          "package_name": "com.legendsumeet.picpixels"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJMrIiuAltlPn13vl6bylEF0s1bFH2MoE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
